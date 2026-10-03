@@ -1,5 +1,8 @@
 // Chinese Learning Bank & Problem Generator for dopa-drill
 // Supports Grade 1-6 across 4 categories: Idiom, Typo, Pinyin, and Poem.
+// The bank = 240 handwritten questions + auto-generated pinyin/idiom
+// questions from data tables (see chinese_gen.js).
+import { GENERATED_QUESTION_BANK } from './chinese_gen.js';
 
 export const CHINESE_LANES = ['成语积淀', '汉字与读音', '错别字辨析', '古诗名句'];
 
@@ -44,7 +47,7 @@ export const CHINESE_SKILLS = [
 export const CHINESE_SKILL_MAP = Object.fromEntries(CHINESE_SKILLS.map((s) => [s.id, s]));
 
 // ---------------------------------------------------------------- Comprehensive Bank
-export const RAW_QUESTION_BANK = [
+const HANDWRITTEN_QUESTION_BANK = [
   // ==================== Grade 1 ====================
   // -- Idiom
   { grade: 1, type: 'idiom', prefix: '一 心 一 ', missing: '意', suffix: '', options: ['意', '忆', '异', '易'], explanation: '一心一意：只有一个心眼，形容心思专一。' },
@@ -339,6 +342,9 @@ export const RAW_QUESTION_BANK = [
   { grade: 6, type: 'poem', prefix: '春风又绿江南岸，明月何时照我', missing: '还', suffix: '。', options: ['还', '环', '缓', '换'], explanation: '宋·王安石《泊船瓜洲》' },
   { grade: 6, type: 'poem', prefix: '但愿人长久，千里共', missing: '婵娟', suffix: '。', options: ['婵娟', '蝉娟', '婵捐', '缠娟'], explanation: '宋·苏轼《水调歌头》' },
 ];
+
+// Full bank: handwritten (curated) + generated (data-table driven).
+export const RAW_QUESTION_BANK = [...HANDWRITTEN_QUESTION_BANK, ...GENERATED_QUESTION_BANK];
 
 // ---------------------------------------------------------------- Generation helpers
 export function shuffle(array, rng = Math.random) {
