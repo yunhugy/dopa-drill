@@ -40,6 +40,19 @@ export function setLanguage(lang) {
   }
 }
 
+// ---------------------------------------------------------------- Subject state
+// The active subject lives in main.js; i18n keeps a mirror so shared copy
+// (quests, trophies) can phrase itself for math or Chinese.
+let currentSubject = 'math';
+
+export function setSubject(subject) {
+  currentSubject = subject === 'chinese' ? 'chinese' : 'math';
+}
+
+export function getSubject() {
+  return currentSubject;
+}
+
 // ---------------------------------------------------------------- Dictionaries
 const STRINGS = {
   zh: {
@@ -818,9 +831,9 @@ export const TROPHY_SERIES_I18N = {
     streak: { title: '连续打卡', name: (v) => `连续 ${v} 天`, desc: (v) => `不间断连续游玩 ${v} 天` },
     stickers: { title: '日历印章', name: (v) => `印章 ${v} 枚`, desc: (v) => `在打卡日历上收集 ${v} 枚印章` },
     crowns: { title: '完美皇冠', name: (v) => `皇冠 ${v} 顶`, desc: (v) => `在日历上累计收获 ${v} 顶满分皇冠` },
-    plays: { title: '游玩次数', name: (v) => `游玩 ${fmtZh(v)} 轮`, desc: (v) => `完成 ${fmtZh(v)} 轮基础算术练习` },
+    plays: { title: '游玩次数', name: (v) => `游玩 ${fmtZh(v)} 轮`, desc: (v) => currentSubject === 'chinese' ? `完成 ${fmtZh(v)} 轮语文练习` : `完成 ${fmtZh(v)} 轮基础算术练习` },
     minutes: { title: '练习时长', name: (v) => (v >= 60 ? `累计 ${v / 60} 小时` : `时长 ${v} 分钟`), desc: (v) => (v >= 60 ? `累计练习时间达 ${v / 60} 小时` : `累计练习时间达 ${v} 分钟`) },
-    problems: { title: '做题总数', name: (v) => `解题 ${fmtZh(v)} 道`, desc: (v) => `累计答对 ${fmtZh(v)} 道数学题` },
+    problems: { title: '做题总数', name: (v) => `解题 ${fmtZh(v)} 道`, desc: (v) => currentSubject === 'chinese' ? `累计答对 ${fmtZh(v)} 道语文题` : `累计答对 ${fmtZh(v)} 道数学题` },
     cells: { title: '填入数字', name: (v) => `填写 ${fmtZh(v)} 格`, desc: (v) => `在算式中正确输入 ${fmtZh(v)} 个数字格` },
     unlocked: { title: '技能解锁', name: (v) => `解锁 ${v} 项`, desc: (v) => `在技能树中解锁 ${v} 项技能` },
     mastered: { title: '技能掌握', name: (v) => `掌握 ${v} 项`, desc: (v) => `在技能树中彻底掌握 ${v} 项技能` },
@@ -1193,8 +1206,8 @@ export function questTextI18n(q, fallbackText) {
   if (!q) return '';
   if (currentLang === 'zh') {
     switch (q.id) {
-      case 'play1': return '游玩 1 轮算术练习';
-      case 'play2': return '游玩 2 轮算术练习';
+      case 'play1': return currentSubject === 'chinese' ? '游玩 1 轮语文练习' : '游玩 1 轮算术练习';
+      case 'play2': return currentSubject === 'chinese' ? '游玩 2 轮语文练习' : '游玩 2 轮算术练习';
       case 'combo5': return '达成 5 连击';
       case 'combo20': return '达成 20 连击';
       case 'first5': return '初次正解 5 道题';

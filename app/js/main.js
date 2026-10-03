@@ -16,7 +16,7 @@ import * as qs from './quests.js';
 import * as tr from './trophies.js';
 import * as ul from './unlocks.js';
 import * as i18n from './i18n.js';
-import { getQuestionsForGrade, getComprehensiveQuestions, buildChineseProblem, CHINESE_SKILLS, CHINESE_SKILL_MAP, ChineseDeck, questionId } from './chinese_bank.js';
+import { getQuestionsForGrade, getComprehensiveQuestions, buildChineseProblem, CHINESE_SKILLS, CHINESE_SKILL_MAP, ChineseDeck, questionId, CHINESE_QUESTION_COUNT } from './chinese_bank.js';
 import { BASIC_SCORE, extraPoints, basicDopaL, extraProblemGain, addDopa, comboMult, comboMaxed, comboWindowMs, comboMilestone, fmtDopa, unitOf, unitLabel } from './scoring.js';
 
 const skillDisplayName = (id) => i18n.skillName(id) || SKILL[id]?.name || '';
@@ -782,8 +782,9 @@ async function clearProblem() {
   const wasReach = S.reach;
   if (wasReach) endReach();
   const extra = S.mode === 'extra';
-  noteProblem(S.problem, !S.wrongInQ);
+  // Chinese questions are not part of the math mistake queue / skill progress.
   if (S.subject === 'chinese') markChineseSeen(S.problem);
+  else noteProblem(S.problem, !S.wrongInQ);
   let gained = 0;
   if (extra) { gained = extraPoints(S.extra.solved); S.extra.solved += 1; S.extra.score += gained; } else { S.solved += 1; if (!S.wrongInQ) S.firstTry += 1; }
   updateTally();
@@ -1583,6 +1584,7 @@ function startReview() {
 }
 function updateSubjectUI() {
   const isChinese = S.subject === 'chinese';
+  i18n.setSubject(S.subject);
   const subMath = $('#sub-math');
   const subChinese = $('#sub-chinese');
   if (subMath) {
@@ -1594,36 +1596,46 @@ function updateSubjectUI() {
     subChinese.setAttribute('aria-selected', String(isChinese));
   }
   const ribbon = $('.logo-ribbon');
-  const levelSub = $('#level-sub');
   if (isChinese) {
     if (ribbon) {
       const iTags = ribbon.querySelectorAll('i');
       if (iTags.length >= 2) { iTags[0].textContent = '语'; iTags[1].textContent = '文'; }
     }
-    if (levelSub) levelSub.textContent = '成语·错别字·拼音·名句综合闯关';
   } else {
     if (ribbon) {
       const iTags = ribbon.querySelectorAll('i');
       if (iTags.length >= 2) { iTags[0].textContent = '速'; iTags[1].textContent = '算'; }
     }
   }
+  // The tree button is math-only; in Chinese mode it becomes a bank-explorer badge.
+  const treeLabel = document.querySelector('#open-tree [data-i18n="skillTree"]');
+  if (treeLabel) treeLabel.textContent = isChinese ? '题库探索' : i18n.t('skillTree');
 }
 
 function refreshTitle() {
   updateSubjectUI();
   const prog = progress();
   const n = prog.review.length;
-  $('#start-review').hidden = !n;
+  const isChinese = S.subject === 'chinese';
+  // The mistake-review queue is math-only; hide it while practising Chinese.
+  $('#start-review').hidden = isChinese ? true : !n;
   $('#review-count').textContent = n;
   const isZh = i18n.getLanguage() === 'zh';
   const isEn = i18n.getLanguage() === 'en';
   const frontierSkill = frontier(prog)[0] || ORDER[ORDER.length - 1];
   const nextName = skillDisplayName(frontierSkill);
-  $('#level-sub').textContent = prog.placed
-    ? (isZh ? `接下来目标「${nextName}」` : (isEn ? `Next: "${nextName}"` : `つぎは「${nextName}」`))
-    : i18n.t('myLevelSub');
+  $('#level-sub').textContent = isChinese
+    ? '成语·错别字·拼音·名句综合闯关'
+    : (prog.placed
+      ? (isZh ? `接下来目标「${nextName}」` : (isEn ? `Next: "${nextName}"` : `つぎは「${nextName}」`))
+      : i18n.t('myLevelSub'));
   const done = SKILLS.filter((x) => stateOf(prog, x.id) === 'mastered').length;
-  $('#tree-badge').textContent = `${done}/${SKILLS.length}`;
+  if (isChinese) {
+    const explored = chineseSeen().size;
+    $('#tree-badge').textContent = `${explored}/${CHINESE_QUESTION_COUNT}`;
+  } else {
+    $('#tree-badge').textContent = `${done}/${SKILLS.length}`;
+  }
   renderQuests();
   refreshTrophyBadge();
   const got = gotTrophies();
@@ -2857,7 +2869,17 @@ $('#go-review').addEventListener('click', startReview);
 $('#f-review').addEventListener('click', startReview);
 $('#start-review').addEventListener('click', startReview);
 $$('.grades button').forEach((b) => b.addEventListener('click', () => startGame('grade', Number(b.dataset.grade))));
-$('#open-tree').addEventListener('click', () => openTree());
+$('#open-tree').addEventListener('click', () => {
+  if (S.subject === 'chinese') {
+    // Chinese mode has no skill tree yet — surface the bank-exploration progress instead.
+    const explored = chineseSeen().size;
+    toast(`语文题库探索：已解锁 ${explored}/${CHINESE_QUESTION_COUNT} 道题目`);
+    audio.unlock();
+    audio.play('blip', audio.now(), { m: 80, v: 0.08 });
+    return;
+  }
+  openTree();
+});
 $('#tree').addEventListener('pointerdown', startHold);
 $('#tree').addEventListener('contextmenu', (e) => { if (e.target.closest('.node')) e.preventDefault(); });
 $('#tree-scroll').addEventListener('scroll', cancelHold, { passive: true });
@@ -2903,7 +2925,7 @@ $('#sub-math')?.addEventListener('click', () => {
   if (S.subject === 'math') return;
   S.subject = 'math';
   localStorage.setItem('dopa-subject', 'math');
-  updateSubjectUI();
+  refreshTitle();
   audio.unlock();
   audio.play('blip', audio.now(), { m: 72, v: 0.12 });
 });
@@ -2911,7 +2933,7 @@ $('#sub-chinese')?.addEventListener('click', () => {
   if (S.subject === 'chinese') return;
   S.subject = 'chinese';
   localStorage.setItem('dopa-subject', 'chinese');
-  updateSubjectUI();
+  refreshTitle();
   audio.unlock();
   audio.play('blip', audio.now(), { m: 84, v: 0.12 });
 });
