@@ -308,12 +308,10 @@ function renderChineseSheet(p) {
   
   const wrap = document.createElement('div');
   wrap.className = 'ch-question-wrap';
-  
-  const tag = document.createElement('span');
-  tag.className = 'ch-tag-badge';
-  tag.textContent = p.title || '语文速练';
-  wrap.appendChild(tag);
-  
+
+  // The card already shows the problem type in its top-left chip (#qtitle),
+  // so no extra type badge is rendered here to avoid duplicating the label.
+
   const sent = document.createElement('div');
   sent.className = 'ch-sentence';
   

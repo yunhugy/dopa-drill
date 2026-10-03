@@ -857,7 +857,10 @@ body.reduced #guide-help-ring, body.reduced .guide-help-fallback::after { animat
   font-weight: 900;
   color: #555;
   cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  /* Note: never use `transition: all` here — iOS WebKit leaves the background
+     stuck mid-transition when the active class flips, so the pill appears to
+     never highlight. Transition only the geometric properties instead. */
+  transition: transform 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
 }
 .sub-pill .sub-emoji { font-size: 16px; }
 .sub-pill.is-active {
@@ -904,7 +907,7 @@ body.reduced #guide-help-ring, body.reduced .guide-help-fallback::after { animat
   cursor: pointer;
   touch-action: manipulation;
   user-select: none;
-  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 .ch-opt .ch-badge {
   display: grid;
@@ -951,16 +954,6 @@ body.reduced #guide-help-ring, body.reduced .guide-help-fallback::after { animat
   gap: 14px;
   width: 100%;
 }
-.ch-tag-badge {
-  display: inline-block;
-  padding: 3px 12px;
-  background: #eef2ff;
-  color: #3b6bff;
-  border: 2px solid var(--ink);
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 900;
-}
 .ch-sentence {
   display: flex;
   align-items: center;
@@ -988,7 +981,9 @@ body.reduced #guide-help-ring, body.reduced .guide-help-fallback::after { animat
   font-weight: 900;
   color: #2a4fd6;
   vertical-align: middle;
-  transition: all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+  /* Same iOS WebKit caveat as the subject pills: `transition: all` can freeze
+     the background mid-way, so only geometric props are transitioned. */
+  transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), border-color 0.2s ease, color 0.2s ease;
 }
 .ch-sentence .cell.input.ch-target.active {
   border-style: solid;
