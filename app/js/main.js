@@ -16,7 +16,7 @@ import * as qs from './quests.js';
 import * as tr from './trophies.js';
 import * as ul from './unlocks.js';
 import * as i18n from './i18n.js';
-import { getQuestionsForGrade, getComprehensiveQuestions, buildChineseProblem, CHINESE_SKILLS, CHINESE_SKILL_MAP } from './chinese_bank.js';
+import { getQuestionsForGrade, getComprehensiveQuestions, buildChineseProblem, CHINESE_SKILLS, CHINESE_SKILL_MAP, ChineseDeck, questionId } from './chinese_bank.js';
 import { BASIC_SCORE, extraPoints, basicDopaL, extraProblemGain, addDopa, comboMult, comboMaxed, comboWindowMs, comboMilestone, fmtDopa, unitOf, unitLabel } from './scoring.js';
 
 const skillDisplayName = (id) => i18n.skillName(id) || SKILL[id]?.name || '';
@@ -42,7 +42,7 @@ const stage = $('#stage');
 const padButtons = Object.fromEntries($$('#pad button').map((b) => [b.dataset.key, b]));
 
 const S = {
-  screen: 'title', subject: (typeof localStorage !== 'undefined' ? localStorage.getItem('dopa-subject') : null) || 'math', N: 10, rng: null, qi: 0, problems: [], problem: null, step: 0,
+  screen: 'title', subject: (typeof localStorage !== 'undefined' ? localStorage.getItem('dopa-subject') : null) || 'math', chDeck: null, N: 10, rng: null, qi: 0, problems: [], problem: null, step: 0,
   E: 0.06, visualE: 0.02, level: 0, ready: false, reach: false, shownWrong: null, wrongInQ: false,
   firstTry: 0, solved: 0, misses: 0, combo: 0, comboEnd: 0, comboLimit: 1, startT: 0, endT: 0, targetMs: 0, mode: 'basic',
   extra: { score: 0, solved: 0, misses: 0, end: 0, over: false }, digitsDone: 0, digitsTotal: 1,
@@ -220,13 +220,35 @@ const getModeLabel = () => ({
 });
 
 // kind: 'level' | 'grade' | 'review' | 'practice' | 'drill'
+const CH_SEEN_KEY = 'dopa-chinese-seen';
+const CH_SEEN_MAX = 500;
+function chineseSeen() {
+  try { return new Set(JSON.parse(localStorage.getItem(CH_SEEN_KEY) || '[]')); } catch { return new Set(); }
+}
+function markChineseSeen(problem) {
+  const id = ChineseDeck.idOf(problem);
+  if (!id) return;
+  try {
+    const arr = [...chineseSeen()];
+    if (!arr.includes(id)) arr.push(id);
+    while (arr.length > CH_SEEN_MAX) arr.shift();
+    localStorage.setItem(CH_SEEN_KEY, JSON.stringify(arr));
+  } catch {}
+}
+function makeChineseDeck(kind, arg) {
+  const seen = chineseSeen();
+  if (kind === 'grade') {
+    const g = Number(arg) || 1;
+    return new ChineseDeck(S.rng, (q) => q.grade === g, seen);
+  }
+  return new ChineseDeck(S.rng, null, seen);
+}
+
 function makePlan(kind, arg) {
   if (S.subject === 'chinese') {
-    if (kind === 'grade') {
-      const g = Number(arg) || 1;
-      return { mode: 'grade', grade: g, isChinese: true, items: getQuestionsForGrade(g, S.N, S.rng) };
-    }
-    return { mode: 'level', isChinese: true, items: getComprehensiveQuestions(S.N, S.rng) };
+    if (!S.chDeck) S.chDeck = makeChineseDeck(kind, arg);
+    const g = Number(arg) || 1;
+    return { mode: kind === 'grade' ? 'grade' : 'level', isChinese: true, grade: g, deck: S.chDeck };
   }
   const prog = progress();
   if (kind === 'grade') return gradePlan(arg, S.N, S.rng);
@@ -246,7 +268,7 @@ function makePlan(kind, arg) {
 
 function nextProblem(i) {
   const plan = S.plan;
-  if (plan.isChinese && plan.items) return plan.items[i] || plan.items[0];
+  if (plan.isChinese && plan.deck) return plan.deck.next();
   if (plan.mode === 'review') return structuredClone(plan.items[i].problem);
   if (plan.legacy) return generate(plan.basic[i], S.rng, i === 0 ? { kind: 'add', a: 27, b: 35 } : null);
   const skill = params.get('skill') || (plan.placement ? plan.pick() : plan.basic[i]);
@@ -427,6 +449,7 @@ function startGame(kind = 'level', arg) {
   S.rng = makeRng(Number(params.get('seed') || Math.floor(Math.random() * 1e9)));
   S.sessionSigs = new Set();
   S.kind = kind; S.kindArg = arg;
+  if (S.subject === 'chinese') S.chDeck = null; // fresh deck per run (picks up newly seen ids)
   S.plan = makePlan(kind, arg);
   applyLook(playLook());
   if (S.plan.mode === 'review') S.N = S.plan.items.length;
@@ -467,7 +490,8 @@ async function setupProblem() {
     const tier = Math.floor(S.extra.solved / 3);
     E = 1 + Math.min(0.5, tier * 0.1);
     applyLevel(E, { key: 2 + Math.min(tier, 5), bpm: 134 + tier * 5 });
-    if (S.plan.legacy) { const pool = EXTRA_TIERS[Math.min(tier, EXTRA_TIERS.length - 1)]; S.problem = generate(pool[S.extra.solved % pool.length], S.rng); }
+    if (S.plan.isChinese && S.chDeck) S.problem = S.chDeck.next();
+    else if (S.plan.legacy) { const pool = EXTRA_TIERS[Math.min(tier, EXTRA_TIERS.length - 1)]; S.problem = generate(pool[S.extra.solved % pool.length], S.rng); }
     else S.problem = sessionProblem(params.get('skill') || S.plan.extra(S.extra.solved));
   } else {
     E = basicE(S.qi);
@@ -761,6 +785,7 @@ async function clearProblem() {
   if (wasReach) endReach();
   const extra = S.mode === 'extra';
   noteProblem(S.problem, !S.wrongInQ);
+  if (S.subject === 'chinese') markChineseSeen(S.problem);
   let gained = 0;
   if (extra) { gained = extraPoints(S.extra.solved); S.extra.solved += 1; S.extra.score += gained; } else { S.solved += 1; if (!S.wrongInQ) S.firstTry += 1; }
   updateTally();
@@ -1406,6 +1431,7 @@ function modeName(plan) {
 // skill. It replaces a basic problem in the middle of the set.
 function planCapsule() {
   S.capsuleAt = -1;
+  if (S.subject === 'chinese') return;
   if (!recording() || !['level', 'grade', 'practice'].includes(S.plan.mode) || S.plan.placement || S.N < 4) return;
   if ((store.load().capsule || {}).lastDay === store.dayKey()) return;
   const c = pickCapsule(progress());
