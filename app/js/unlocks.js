@@ -30,7 +30,7 @@ addItems([
   { id: 'particle:classic', cat: 'particle', name: 'かみふぶき', base: true },
   { id: 'music:classic', cat: 'music', name: 'マリンバ マーチ', base: true },
   { id: 'costume:none', cat: 'costume', name: 'なし', base: true },
-  { id: 'color:pink', cat: 'color', name: 'ピンク', base: true },
+  { id: 'color:apple', cat: 'color', name: 'りんご', base: true },
   { id: 'crowd:classic', cat: 'crowd', name: 'いろちがい', base: true },
   { id: 'finale:classic', cat: 'finale', name: 'きょだい ドパキチ', base: true },
 ]);
@@ -43,6 +43,7 @@ addItems([
   { id: 'mark:stamp', cat: 'mark', name: 'せいかいスタンプ', trophy: 'plays-3' },
   { id: 'bg:night', cat: 'bg', name: 'よぞら', trophy: 'streak-3' },
   { id: 'color:blue', cat: 'color', name: 'あお', trophy: 'plays-5' },
+  { id: 'color:pink', cat: 'color', name: 'ピンク', trophy: 'plays-1' },
   { id: 'finale:fireworks', cat: 'finale', name: 'はなびたいかい', trophy: 'extras-5' },
   { id: 'music:chip', cat: 'music', name: '8ビット', trophy: 'plays-10' },
   { id: 'crowd:costume', cat: 'crowd', name: 'きせかえ おきゃくさん', trophy: 'firstTry-50' },

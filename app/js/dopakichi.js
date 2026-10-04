@@ -12,6 +12,8 @@ const CREAM = '#fff3e4';
 const LEAF_GREEN = '#7BA94A';
 const STEM_BROWN = '#8B5A3C';
 export const PALETTES = {
+  // The default look: the red apple from the character sheet.
+  apple: { body: '#C93F2F', inner: '#ffe6f0', leg: '#a93226', cheek: '#ffd9c2' },
   pink: { body: '#ff97bf', inner: '#ffe6f0', leg: '#2f79f7', cheek: '#ffe6f0' },
   blue: { body: '#6fa0ff', inner: '#dde8ff', leg: '#ff97bf', cheek: '#ffd6e6' },
   yellow: { body: '#ffd452', inner: '#fff3c4', leg: '#2f79f7', cheek: '#ffd9c2' },
@@ -106,7 +108,7 @@ const STYLE = `.dk-l,.dk-f,.dk-t{stroke:${INK};stroke-linecap:round;stroke-linej
 let uid = 0;
 
 export class Dopakichi {
-  constructor(layer, { scale = 0.7, palette = 'pink', front } = {}) {
+  constructor(layer, { scale = 0.7, palette = 'apple', front } = {}) {
     this.layer = layer;
     this.S = scale;
     this.lw = lineFor(scale);
