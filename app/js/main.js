@@ -1662,6 +1662,7 @@ function toTitle() {
 
 // ---------------------------------------------------------------- frame loop
 let lastClockText = '';
+let lastKick = '';
 onFrame((dt, t) => {
   audio.update();
   demoTick(t);
@@ -1669,7 +1670,10 @@ onFrame((dt, t) => {
   const pulse = audio.pulse();
   const targetKick = audio.playing ? pulse.kick * (S.level >= 1 ? 1 : 0.2) : 0;
   S.kick = S.reduced ? 0 : targetKick;
-  body.style.setProperty('--kick', S.kick.toFixed(3));
+  // Only touch the DOM when the value really changes: writing a CSS custom
+  // property on <body> invalidates style for all its consumers, every frame.
+  const kickStr = S.kick.toFixed(3);
+  if (kickStr !== lastKick) { lastKick = kickStr; body.style.setProperty('--kick', kickStr); }
 
   // dopa counter rolls in log space
   const d = S.dopa;

@@ -22,16 +22,45 @@ function tick() {
   }
 }
 
+let rafId = null;
+let watchdogId = null;
+let lastFrameAt = 0;
+
+function frame() {
+  lastFrameAt = performance.now();
+  tick();
+  rafId = requestAnimationFrame(frame);
+}
+
 export function startClock() {
   if (running) return;
   running = true;
   last = performance.now();
-  setInterval(tick, 16);
-  function raf() {
-    tick();
-    requestAnimationFrame(raf);
-  }
-  requestAnimationFrame(raf);
+  lastFrameAt = performance.now();
+  frame();
+  // Watchdog: fires only when RAF has stalled (background tab / headless shell),
+  // so the clock stays alive without doubling the per-frame work.
+  watchdogId = setInterval(() => {
+    if (performance.now() - lastFrameAt > 300) {
+      lastFrameAt = performance.now();
+      tick();
+    }
+  }, 120);
+}
+
+export function stopClock() {
+  if (!running) return;
+  running = false;
+  if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+  if (watchdogId !== null) { clearInterval(watchdogId); watchdogId = null; }
+}
+
+// Pause the whole clock while the page is hidden: no RAF, no timer, zero wake-ups.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopClock();
+    else startClock();
+  });
 }
 
 // Rock-solid wait implementation
