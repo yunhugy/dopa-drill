@@ -1,5 +1,5 @@
 // Full-screen WebGL backdrop: sunburst rays that grow into a rainbow tunnel of
-// Dopakichi silhouettes. Falls back to a CSS conic gradient without WebGL.
+// Pingping silhouettes. Falls back to a CSS conic gradient without WebGL.
 
 const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0., 1.); }`;
 const FRAG = `precision highp float;
@@ -7,18 +7,20 @@ uniform vec2 uRes; uniform vec2 uCenter; uniform float uTime, uE, uKick, uFlash,
 vec3 hsv(float h, float s, float v){ vec3 k = clamp(abs(mod(h*6. + vec3(0.,4.,2.), 6.) - 3.) - 1., 0., 1.); return v * mix(vec3(1.), k, s); }
 float hash(vec2 c){ return fract(sin(dot(c, vec2(127.1, 311.7))) * 43758.5453); }
 mat2 rot(float a){ float c = cos(a), s = sin(a); return mat2(c, -s, s, c); }
-// Dopakichi head silhouette: a wide rounded head with large side ears.
-float dopa(vec2 p){
-  vec2 q = (p - vec2(0., -0.02)) / vec2(0.2, 0.15);
-  float h = (length(q) - 1.) * 0.15;
-  float e1 = length(p - vec2(-0.26, 0.01)) - 0.11;
-  float e2 = length(p - vec2(0.26, 0.01)) - 0.11;
-  return min(h, min(e1, e2));
+// Pingping apple silhouette: a round apple with a stem and a leaf on top.
+float ping(vec2 p){
+  vec2 q = (p - vec2(0., -0.04)) / vec2(0.19, 0.16);
+  float body = (length(q) - 1.) * 0.16;
+  vec2 sp = vec2(p.x * 3.0, (p.y - 0.14) * 3.0);
+  float stem = (length(sp) - 0.05) * 0.33;
+  vec2 lp = (p - vec2(0.09, 0.15)) / vec2(0.075, 0.035);
+  float leaf = (length(lp) - 1.) * 0.035;
+  return min(body, min(stem, leaf));
 }
 // Beat rings travelling outward (shared).
 float beatRings(float r, float t, float E){ return smoothstep(.35, .7, E) * smoothstep(0.035, 0., abs(fract(r * 2.4 - t * 0.8) - .5) - .45); }
 
-// 0: sunburst rays -> rainbow -> tunnel of Dopakichi faces.
+// 0: sunburst rays -> rainbow -> tunnel of Pingping faces.
 vec3 classic(vec2 p, float r, float a, float E, float t){
   float nr = floor(mix(10., 20., clamp(E, 0., 1.)));
   float tw = sin(r * 6. - t * 1.5) * 0.25 * smoothstep(.6, 1., E);
@@ -37,7 +39,7 @@ vec3 classic(vec2 p, float r, float a, float E, float t){
     vec2 uv = vec2(a / 6.2832 * 10., 0.32 / (r + .015) + t * (1.2 + .8 * max(0., E - 1.)));
     vec2 cell = floor(uv); vec2 f = fract(uv) - .5;
     f.x += .5 * mod(cell.y, 2.) - .25;
-    float d = dopa(vec2(f.x, -f.y) * 1.1);
+    float d = ping(vec2(f.x, -f.y) * 1.1);
     vec3 sc = hsv(fract((cell.x * .11 + cell.y * .17) + t * .25 + uHue), .7, 1.);
     float m = smoothstep(.015, -.015, d) * smoothstep(.02, .22, r);
     float ol = smoothstep(.03, 0., abs(d + .012)) * smoothstep(.02, .22, r);
