@@ -172,13 +172,15 @@ function buildIdiomItem(row) {
     for (const c of sampleDistinct(rng, spare, 3 - distractors.length)) distractors.push(c);
   }
   const before = chars.slice(0, blank).join(' ');
+  const after = chars.slice(blank + 1).join(' ');
   const prefix = before ? before + ' ' : '';
+  const suffix = after ? ' ' + after : '';
   return {
     grade,
     type: 'idiom',
     prefix,
     missing: answer,
-    suffix: '',
+    suffix,
     options: [answer, ...distractors],
     explanation: `${idiom}：${meaning}`,
   };

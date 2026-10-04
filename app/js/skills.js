@@ -30,8 +30,6 @@ export const SKILLS = [
   { id: 'g2-kuku67', name: '九九 6と7のだん', grade: 2, lane: 1, req: ['g2-kuku34'], gen: ['kuku', { dans: [6, 7] }] },
   { id: 'g2-kuku891', name: '九九 8・9・1のだん', grade: 2, lane: 1, req: ['g2-kuku67'], gen: ['kuku', { dans: [8, 9, 1] }] },
   { id: 'g2-kuku-mix', name: '九九 まぜこぜ', grade: 2, lane: 1, req: ['g2-kuku891'], gen: ['kuku', { dans: [1, 2, 3, 4, 5, 6, 7, 8, 9] }] },
-  { id: 'g2-mul-tens', name: '何十×1けた', grade: 2, lane: 1, req: ['g2-kuku-mix'], gen: ['mulTens', {}] },
-  { id: 'g2-frac-of', name: '1/2と1/4', grade: 2, lane: 2, req: ['g2-kuku25'], gen: ['fracOf', { dens: [2, 4] }] },
 
   // ---------------------------------------------------------------- grade 3
   { id: 'g3-vadd3', name: '3けたのたしざん', grade: 3, lane: 0, req: ['g2-vadd3s'], gen: ['vadd', { da: 3, db: 3, carry: 'some', maxDigits: 3 }] },
@@ -41,12 +39,14 @@ export const SKILLS = [
   { id: 'g3-div-basic', name: 'わりざん', grade: 3, lane: 1, req: ['g2-kuku-mix'], gen: ['div', { exact: true }] },
   { id: 'g3-div-rem', name: 'あまりのあるわりざん', grade: 3, lane: 1, req: ['g3-div-basic'], gen: ['divRem', {}] },
   { id: 'g3-div-tens', name: '何十÷1けた', grade: 3, lane: 1, req: ['g3-div-basic'], gen: ['divTens', {}] },
+  { id: 'g2-mul-tens', name: '何十×1けた', grade: 3, lane: 1, req: ['g2-kuku-mix'], gen: ['mulTens', {}] },
   { id: 'g3-vmul-2x1', name: '2けた×1けた ひっさん', grade: 3, lane: 1, req: ['g2-mul-tens'], gen: ['vmul', { da: 2, db: 1 }] },
   { id: 'g3-vmul-3x1', name: '3けた×1けた', grade: 3, lane: 1, req: ['g3-vmul-2x1'], gen: ['vmul', { da: 3, db: 1 }] },
   { id: 'g3-vmul-2x2', name: '2けた×2けた', grade: 3, lane: 1, req: ['g3-vmul-2x1'], gen: ['vmul', { da: 2, db: 2 }] },
   { id: 'g3-vmul-3x2', name: '3けた×2けた', grade: 3, lane: 1, req: ['g3-vmul-2x2', 'g3-vmul-3x1'], gen: ['vmul', { da: 3, db: 2 }] },
   { id: 'g3-dec-add1', name: '小数のたしざん', grade: 3, lane: 2, req: ['g2-vadd2-c'], gen: ['vdec', { op: 'add', places: 1 }] },
   { id: 'g3-dec-sub1', name: '小数のひきざん', grade: 3, lane: 2, req: ['g3-dec-add1', 'g2-vsub2-b'], gen: ['vdec', { op: 'sub', places: 1 }] },
+  { id: 'g2-frac-of', name: '1/2と1/4', grade: 3, lane: 2, req: ['g2-kuku25'], gen: ['fracOf', { dens: [2, 4] }] },
   { id: 'g3-frac-same', name: '分数のたしひき', grade: 3, lane: 2, req: ['g2-frac-of'], gen: ['frac', { op: 'addsub', same: true, maxOne: true }] },
 
   // ---------------------------------------------------------------- grade 4
